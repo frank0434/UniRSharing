@@ -1,21 +1,12 @@
 # install libraries -------------------------------------------------------------------------
+## Don't worry about the following code, just run it. only need to run once
 
-Required_pkgs <- c("readxl", "tidyverse", "ggplot2",
-                   "magrittr", "germinationmetrics")
-
-## Don't worry about the following code, just run it.
-
-for(i in Required_pkgs){
-
-  if(isFALSE(require(i, quietly = T))){
-    cat("Required libraries are not installed. Installing", i,"\n")
-    install.packages(i)
-  } else {
-      print("Good to go.")
-    }
-
-
-}
+install.packages("readxl")
+install.packages("tidyverse")
+install.packages("magrittr")
+install.packages("ggplot2")
+install.packages("germinationmetrics")
+install.packages("reshape2")
 
 # load libraries ----------------------------------------------------------
 
@@ -49,38 +40,29 @@ df_selected <- df %>%
 
 
 # visualisation 1----------------------------------------------------------
-
+## The actual time of experiment irrelevant, we will use the days.
 df_selected %>%
-  ggplot(aes(Date.Time, Average.of.Seeds.Germinated)) +
+  ggplot(aes(Average.of.Days, Average.of.Seeds.Germinated)) +
   geom_point()
 
-##notes:
-#1. the experiment run twice: one in March and the other in May.
-
-# data manipulation 2------------------------------------------------------
-## We will look at the first set of data
-df_selected1 <- df_selected %>%
-  ## use filter function to keep only date smaller than 2021-04-01
-  filter(Date.Time < "2021-04-01")
-
 # visualisation 2----------------------------------------------------------
-df_selected1 %>%
-  ggplot(aes(Date.Time, Average.of.Seeds.Germinated, color = Temperature)) +
+## Use the color argument to visualise the data by color
+df_selected %>%
+  ggplot(aes(Average.of.Days, Average.of.Seeds.Germinated, color = Temperature)) +
   geom_point()
 
 ##notes:
 #1. Temperature is numeric values which shows as on a continuous scale
-# data manipulation 3------------------------------------------------------
 
-df_selected1 <- df_selected %>%
-  filter(Date.Time < "2021-04-01") %>%
+# data manipulation 2------------------------------------------------------
+# df_selected <- df_selected %>%
   ## use mutate function to change Temperature column from numeric to character
-  mutate(Temperature = as.character(Temperature))
+  # mutate(Temperature = as.character(Temperature))
 
 # visualisation 3----------------------------------------------------------
 
-df_selected1 %>%
-  ggplot(aes(Date.Time, Average.of.Seeds.Germinated,
+df_selected %>%
+  ggplot(aes(Average.of.Days, Average.of.Seeds.Germinated,
              color= Temperature)) +
   geom_point(size = 3)
 
@@ -90,15 +72,19 @@ df_selected1 %>%
 # data manipulation 3------------------------------------------------------
 ## Calculate the cumulative seed germination rate.
 
-df_cumsum1 <- df_selected1 %>%
+df_selected <- df_selected %>%
+  group_by(Average.of.Days, Temperature, PetriDishN.) %>%
+  summarise(Average.of.Seeds.Germinated = sum(Average.of.Seeds.Germinated))
+
+df_cumsum <- df_selected %>%
   ## Use group_by functions to group data into smaller chunks by Temperature and Petridish number
   group_by(Temperature, PetriDishN.)  %>%
   ## Use mutate function to calculate the cumulative sum (the cumsum function)
   mutate(cummulative_germination = cumsum(Average.of.Seeds.Germinated))
 # visualisation 4----------------------------------------------------------
 
-df_cumsum1 %>%
-  ggplot(aes(Date.Time, cummulative_germination, color= Temperature)) +
+df_cumsum %>%
+  ggplot(aes(Average.of.Days, cummulative_germination, color= Temperature)) +
   geom_point(size = 3) +
   ## Use smooth function to indicate a general pattern among the data
   geom_smooth()
@@ -117,20 +103,28 @@ head(gcdata)
 ## 4. Total seeds in each treatment+Petridishes in the last column.
 
 # data manipulation 4------------------------------------------------------
-gcdf <- df_cumsum1 %>%
-  select(Temperature, PetriDishN., Average.of.Seeds.Germinated, Date.Time) %>%
+gcdf <- df_cumsum %>%
+
   pivot_wider(id_cols = c(Temperature, PetriDishN.),
-              names_from = Date.Time,
+              names_from = Average.of.Days,
               values_from = Average.of.Seeds.Germinated,
               values_fill = 0) %>%
   mutate(TotalSeed = 50)
 
-counts.per.intervals <- as.character(unique(df_cumsum1$Date.Time))
+counts.per.intervals <- as.character(unique(df_cumsum$Average.of.Days))
+intervales <- length(counts.per.intervals)
 fitted <- FourPHFfit.bulk(data = gcdf,
                           total.seeds.col = "TotalSeed",
                           counts.intervals.cols = counts.per.intervals,
-                          intervals = 1:18,tmax = 20)
-plot(fitted,group.col = "Temperature")
+                          intervals = 1:intervales,tmax = 20)
+plot(fitted,group.col = "Temperature", show.points = TRUE,  annotate = "t50.germ")
+
+germinated50 <- fitted %>%
+  select(Temperature,PetriDishN.,t50.Germinated)
+
+germinated50 %>%
+  ggplot(aes(Temperature, 1/t50.Germinated)) +
+  geom_point()
 
 ## Average the germinated seed across the Petri Dishes
 
@@ -147,11 +141,6 @@ df_summary1 %>%
   geom_point(size = 3) +
   # geom_line() +
   geom_smooth()
-
-%>%
-  group_by(Temperature) %>%
-  mutate(cummulative = cumsum(Average.of.Seeds.Germinated))
-
 
 # fit the curves ----------------------------------------------------------
 
