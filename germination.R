@@ -123,25 +123,18 @@ germinated50 <- fitted %>%
   select(Temperature,PetriDishN.,t50.Germinated)
 
 germinated50 %>%
-  ggplot(aes(Temperature, 1/t50.Germinated)) +
-  geom_point()
-
-## Average the germinated seed across the Petri Dishes
-
-df_summary1 <- df_selected1 %>%
-  group_by(Temperature, Date.Time) %>%
-  summarise(mean_seed_g = mean(Average.of.Seeds.Germinated, na.rm = TRUE),
-            mean_days = mean(Average.of.Days, na.rm = TRUE),
-            sd_seed_g = sd(Average.of.Seeds.Germinated, na.rm = TRUE)) %>%
   group_by(Temperature) %>%
-  mutate(cummulative_germination = cumsum(mean_seed_g))
-
-df_summary1 %>%
-  ggplot(aes(Date.Time, cummulative_germination, color= Temperature)) +
-  geom_point(size = 3) +
-  # geom_line() +
+  summarise(t50.Germinated = mean(t50.Germinated)) %>%
+  ggplot(aes(Temperature, 1/t50.Germinated)) +
+  geom_point()+
   geom_smooth()
 
-# fit the curves ----------------------------------------------------------
+
+# temperature 3 have huge variations  -------------------------------------
+
+df_selected %>%
+  filter(Temperature == 3) %>%
+  ggplot(aes(Average.of.Days, Average.of.Seeds.Germinated)) +
+  geom_point()
 
 
