@@ -7,7 +7,7 @@ install.packages("magrittr")
 install.packages("ggplot2")
 install.packages("germinationmetrics")
 install.packages("reshape2")
-
+install.packages("segmented")
 # load libraries ----------------------------------------------------------
 
 library(readxl)     # Read excel files
@@ -142,44 +142,70 @@ head(gcdata)
 
 # data manipulation 4------------------------------------------------------
 gcdf <- df_germdailysum %>%
-
-  pivot_wider(id_cols = c(Temperature),
+  ## Change the data to wider format to match the function input requirements
+  pivot_wider(id_cols = Temperature,
               names_from = Days,
               values_from = Average.of.Seeds.Germinated,
               values_fill = 0) %>%
+  ## Add a new column to indicate the total seed number for the function
   mutate(TotalSeed = 50)
-
+## Create a new object to save the column name
 counts.per.intervals <- as.character(unique(df_germdaily$Days))
+## Create a new object to save the number of days
 intervales <- length(counts.per.intervals)
+## Call the fitting function
 fitted <- FourPHFfit.bulk(data = gcdf,
                           total.seeds.col = "TotalSeed",
                           counts.intervals.cols = counts.per.intervals,
                           intervals = 1:intervales,tmax = 30, tries = 100)
+# visualisation 5----------------------------------------------------------
+
 plot(fitted,group.col = "Temperature", show.points = TRUE,  annotate = "t50.germ")
 
+
+# select the 50% germination  ---------------------------------------------
 germinated50 <- fitted %>%
-  select(Temperature,t50.Germinated)
+  ## Double colons are called namespace operator more details:https://r-pkgs.org/namespace.html
+  ## In short, it is for specifying a function from a package
+  dplyr::select(Temperature, t50.total)
+
+
+# visualise the days to 50% germination ~ temperature ---------------------
 
 germinated50 %>%
-  ggplot(aes(Temperature, 1/t50.Germinated)) +
-  geom_point()
-
-## Average the germinated seed across the Petri Dishes
-
-df_summary1 <- df_selected1 %>%
-  group_by(Temperature, Date.Time) %>%
-  summarise(mean_seed_g = mean(Average.of.Seeds.Germinated, na.rm = TRUE),
-            mean_days = mean(Average.of.Days, na.rm = TRUE),
-            sd_seed_g = sd(Average.of.Seeds.Germinated, na.rm = TRUE)) %>%
-  group_by(Temperature) %>%
-  mutate(cummulative_germination = cumsum(mean_seed_g))
-
-df_summary1 %>%
-  ggplot(aes(Date.Time, cummulative_germination, color= Temperature)) +
+  ggplot(aes(Temperature, t50.total)) +
   geom_point(size = 3) +
-  # geom_line() +
-  geom_smooth()
+  theme_light()+
+  labs(y = "Days to 50% germination")
 
-# fit the curves ----------------------------------------------------------
 
+# fit a broken stick lines ------------------------------------------------
+
+library(segmented)
+## Convert to 1/d
+germinated50 <- germinated50 %>%
+  mutate(t50.Germinated = 1/t50.total)
+## Prepare a linear model for the broken sticks fitting
+lmfit <- lm(t50.Germinated ~  Temperature, data = germinated50)
+## Fit linear model to the broken stick function
+seglmfit <- segmented(lmfit, seg.Z = ~Temperature, npsi = 1)
+#https://stackoverflow.com/questions/33164639/how-to-use-ggplot2-to-plot-results-from-segmented-package
+
+germinated50 %>%
+  ## Drop missing values (na) before visualisation
+  drop_na() %>%
+  ggplot(aes(x = Temperature, y = t50.Germinated)) +
+  geom_point() +
+  ## broken.line function to extract the fitted values from the broken sticks function
+  geom_line(aes(x = Temperature, y =  broken.line(seglmfit)$fit), color = 'blue')+
+  theme_light()+
+  labs(y = "1/d")
+
+## Details about the broken sticks fitting
+summary(seglmfit)
+# Extract the optimal temperature
+seglmfit$psi
+
+# Extract the coeficiencies
+seglmfit$coefficients
 
