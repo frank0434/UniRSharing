@@ -99,7 +99,7 @@ df_germdaily %>%
 ##Exercises? change temperature to PetriDash number?
 
 
-# data manipulation 3------------------------------------------------------
+# data manipulation 4------------------------------------------------------
 ## Calculate the cumulative seed germination rate.
 
 df_cumsum <- df_germdaily %>%
@@ -107,7 +107,7 @@ df_cumsum <- df_germdaily %>%
   group_by(Temperature, PetriDishN.)  %>%
   ## Use mutate function to calculate the cumulative sum (the cumsum function)
   mutate(cummulative_germination = cumsum(Average.of.Seeds.Germinated))
-# visualisation 4----------------------------------------------------------
+# visualisation 6----------------------------------------------------------
 
 df_cumsum %>%
   ggplot(aes(Days, cummulative_germination, color= Temperature)) +
@@ -115,7 +115,7 @@ df_cumsum %>%
   ## Use smooth function to indicate a general pattern among the data
   geom_smooth()
 
-# data manipulation 4 and non-updating visualisation ----------------------
+# data manipulation 5 and non-updating visualisation ----------------------
 df_cumsum %>%
   ## use mutate function to change Temperature column from numeric to character
   mutate(Temperature = as.character(Temperature)) %>%
@@ -140,7 +140,7 @@ head(gcdata)
 ## 3. Different Petri Dishes in the second column
 ## 4. Total seeds in each treatment+Petridishes in the last column.
 
-# data manipulation 4------------------------------------------------------
+# data manipulation 6------------------------------------------------------
 gcdf <- df_germdailysum %>%
   ## Change the data to wider format to match the function input requirements
   pivot_wider(id_cols = Temperature,
@@ -158,7 +158,7 @@ fitted <- FourPHFfit.bulk(data = gcdf,
                           total.seeds.col = "TotalSeed",
                           counts.intervals.cols = counts.per.intervals,
                           intervals = 1:intervales,tmax = 30, tries = 100)
-# visualisation 5----------------------------------------------------------
+# visualisation 7----------------------------------------------------------
 
 plot(fitted,group.col = "Temperature", show.points = TRUE,  annotate = "t50.germ")
 
