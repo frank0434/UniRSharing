@@ -1,3 +1,3 @@
 # UniRSharing
 
-A short tutorial for getting agsci student into R
+A short tutorial for getting agsci students into R.
