@@ -20,7 +20,7 @@ library(germinationmetrics)
 ## Read excel file in and save it into a data.frame called df.
 ## argument skip and .name_repair can determine where to start import the data
 ## and replace the spaces with dot in the column names, respectively.
-df <- read_excel("Data/Data.xlsx", skip = 3, .name_repair = "universal")
+df <- read_excel()
 
 ## Use head function to view the top 5 rows
 head(df)
@@ -33,23 +33,22 @@ str(df)
 # data manipulation 1------------------------------------------------------
 
 ## Select the necessary columns. Tip: use TAB key on the keyboard
+## Columns to select Temperature, Date.Time, PetriDishN., Average.of.Seeds.Germinated, Average.of.Days
 ## The %>% (pipe) can take an object and pass it to next function.
 df_selected <- df %>%
-  select(Temperature, Date.Time, PetriDishN., Average.of.Seeds.Germinated,
-         Average.of.Days)
+  select(...)
 
 
 # visualisation 1----------------------------------------------------------
 ## The actual time of experiment irrelevant, we will use the days.
 df_selected %>%
-  ggplot(aes(Date.Time, Average.of.Seeds.Germinated)) +
+  ggplot(aes(x = , y = )) +
   geom_point()
-
 
 # visualisation 2----------------------------------------------------------
 ## Use the color argument to visualise the data by color
 df_selected %>%
-  ggplot(aes(Average.of.Days, Average.of.Seeds.Germinated, color = Temperature)) +
+  ggplot(aes()) +
   geom_point()
 
 ##notes:
@@ -59,13 +58,13 @@ df_selected %>%
 # data manipulation 2------------------------------------------------------
 
 df_germdaily <- df_selected %>%
-  mutate(Date.Time = as.Date(Date.Time)) %>%
-  group_by(Date.Time, PetriDishN.,Temperature) %>%
-  summarise(Average.of.Seeds.Germinated = sum(Average.of.Seeds.Germinated))
+  mutate(Date.Time = as.Date()) %>%
+  group_by() %>%
+  summarise()
 # visualisation 3----------------------------------------------------------
 
 df_germdaily %>%
-  ggplot(aes(Date.Time, Average.of.Seeds.Germinated, color = Temperature)) +
+  ggplot(aes()) +
   geom_point()
 # Notes:
 ## 1. The experiment was conducted in two different times.
@@ -74,21 +73,23 @@ df_germdaily %>%
 
 # data manipulation 3------------------------------------------------------
 
-actual_date <- unique(df_germdaily$Date.Time)
+actual_date <- unique()
+## Use ifelse function to allocate each period a number
 Period <- ifelse(actual_date < "2021-04-01", 1, 2)
+# create a numeric day counts to match the actual date
 df_days <- data.frame(Date.Time = actual_date, Period = Period) %>%
   group_by(Period) %>%
   mutate(Days = 1:n())
 
 
 df_germdaily <- df_germdaily %>%
-  left_join(df_days, by = c("Date.Time"))
+  left_join(, by = c("Date.Time"))
 
 # visualisation 4----------------------------------------------------------
 
 df_germdaily %>%
-  ggplot(aes(Days, Average.of.Seeds.Germinated,
-             color= Temperature)) +
+  ggplot(aes(
+             color = )) +
   geom_point(size = 3)
 
 ##Exercises? change temperature to PetriDash number?
@@ -99,13 +100,13 @@ df_germdaily %>%
 
 df_cumsum <- df_germdaily %>%
   ## Use group_by functions to group data into smaller chunks by Temperature and Petridish number
-  group_by(Temperature, PetriDishN.)  %>%
+  group_by()  %>%
   ## Use mutate function to calculate the cumulative sum (the cumsum function)
-  mutate(cummulative_germination = cumsum(Average.of.Seeds.Germinated))
+  mutate(cummulative_germination = cumsum())
 # visualisation 5----------------------------------------------------------
 
 df_cumsum %>%
-  ggplot(aes(Days, cummulative_germination, color= Temperature)) +
+  ggplot(aes(, , color= )) +
   geom_point(size = 3) +
   ## Use smooth function to indicate a general pattern among the data
   geom_smooth()
@@ -113,8 +114,8 @@ df_cumsum %>%
 # data manipulation 5 and non-updating visualisation ----------------------
 df_cumsum %>%
   ## use mutate function to change Temperature column from numeric to character
-  mutate(Temperature = as.character(Temperature)) %>%
-  ggplot(aes(Days, cummulative_germination, color= Temperature)) +
+  mutate(Temperature = as.character()) %>%
+  ggplot(aes(, , color= )) +
   geom_point(size = 3) +
   ## Use smooth function to indicate a general pattern among the data
   geom_smooth()
@@ -122,8 +123,8 @@ df_cumsum %>%
 ## But this won't give us the formula for the germination rates.
 ## So we need the specific function to fit the curves.
 df_germdailysum <- df_germdaily %>%
-  group_by(Temperature, Days) %>%
-  summarise(Average.of.Seeds.Germinated = mean(Average.of.Seeds.Germinated))
+  group_by(, ) %>%
+  summarise(Average.of.Seeds.Germinated = mean())
 # curve fitting via germinationmetric package  ----------------------------
 ## To get help documentation -- super useful
 ?FourPHFfit.bulk()
@@ -138,9 +139,9 @@ head(gcdata)
 # data manipulation 6------------------------------------------------------
 gcdf <- df_germdailysum %>%
   ## Change the data to wider format to match the function input requirements
-  pivot_wider(id_cols = Temperature,
-              names_from = Days,
-              values_from = Average.of.Seeds.Germinated,
+  pivot_wider(id_cols = ,
+              names_from = ,
+              values_from = ,
               values_fill = 0) %>%
   ## Add a new column to indicate the total seed number for the function
   mutate(TotalSeed = 50)
@@ -149,26 +150,26 @@ counts.per.intervals <- as.character(unique(df_germdaily$Days))
 ## Create a new object to save the number of days
 intervales <- length(counts.per.intervals)
 ## Call the fitting function
-fitted <- FourPHFfit.bulk(data = gcdf,
+fitted <- FourPHFfit.bulk(data = ,
                           total.seeds.col = "TotalSeed",
                           counts.intervals.cols = counts.per.intervals,
                           intervals = 1:intervales,tmax = 30, tries = 100)
 # visualisation 6----------------------------------------------------------
 
-plot(fitted,group.col = "Temperature", show.points = TRUE,  annotate = "t50.germ")
+plot(fitted, group.col = "Temperature", show.points = TRUE,  annotate = "t50.germ")
 
 
 # select the 50% germination  ---------------------------------------------
 germinated50 <- fitted %>%
   ## Double colons are called namespace operator more details:https://r-pkgs.org/namespace.html
   ## In short, it is for specifying a function from a package
-  dplyr::select(Temperature, t50.total)
+  dplyr::select(, )
 
 
 # visualise the days to 50% germination ~ temperature ---------------------
 
 germinated50 %>%
-  ggplot(aes(Temperature, t50.total)) +
+  ggplot(aes(, )) +
   geom_point(size = 3) +
   theme_light()+
   labs(y = "Days to 50% germination")
