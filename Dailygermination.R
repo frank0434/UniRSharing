@@ -157,7 +157,6 @@ fitted <- FourPHFfit.bulk(data = gcdf,
 
 plot(fitted,group.col = "Temperature", show.points = TRUE,  annotate = "t50.germ")
 
-
 # select the 50% germination  ---------------------------------------------
 germinated50 <- fitted %>%
   ## Double colons are called namespace operator more details:https://r-pkgs.org/namespace.html
@@ -190,7 +189,7 @@ germinated50 %>%
   ## Drop missing values (na) before visualisation
   drop_na() %>%
   ggplot(aes(x = Temperature, y = t50.Germinated)) +
-  geom_point() +
+  geom_point(size = 3) +
   ## broken.line function to extract the fitted values from the broken sticks function
   geom_line(aes(x = Temperature, y =  broken.line(seglmfit)$fit), color = 'blue')+
   theme_light()+

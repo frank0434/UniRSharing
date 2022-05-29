@@ -8,25 +8,27 @@ install.packages("ggplot2")
 install.packages("germinationmetrics")
 install.packages("reshape2")
 install.packages("segmented")
+
+install.packages() # Use TAB key on the keyboard to save typing
 # load libraries ----------------------------------------------------------
 
-library(readxl)     # Read excel files
-library(tidyverse)  # Data manipulation
-library(ggplot2)    # Visualisation
-library(magrittr)   # Helper to chain command together
-library(germinationmetrics)
+library()     # Read excel files
+library()  # Data manipulation
+library()    # Visualisation
+library()   # Helper to chain command together
+library()
 # read data  --------------------------------------------------------------
 
 ## Read excel file in and save it into a data.frame called df.
 ## argument skip and .name_repair can determine where to start import the data
 ## and replace the spaces with dot in the column names, respectively.
-df <- read_excel()
+df <- read_excel() # try TAB key
 
 ## Use head function to view the top 5 rows
-head(df)
+head()
 
 ## Use str function to quickly overview the data structure
-str(df)
+str()
 ##notes:
 #1. the column names with numeric numbers are instructions.
 
@@ -35,6 +37,7 @@ str(df)
 ## Select the necessary columns. Tip: use TAB key on the keyboard
 ## Columns to select Temperature, Date.Time, PetriDishN., Average.of.Seeds.Germinated, Average.of.Days
 ## The %>% (pipe) can take an object and pass it to next function.
+## SHORT CUT Ctrl + Shift + M
 df_selected <- df %>%
   select(...)
 
